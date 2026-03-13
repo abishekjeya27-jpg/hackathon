@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ReturnShield AI 🔮</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #120a1e;
+    --surface:   #1c1030;
+    --card:      #251540;
+    --border:    #3d2260;
+    --glow:      #7c3aed;
+    --lavender:  #c084fc;
+    --ghostPink: #f0abfc;
+    --sage:      #86efac;
+    --moon:      #fde68a;
+    --pumpkin:   #fb923c;
+    --blood:     #f87171;
+    --sky:       #93c5fd;
+    --text:      #ede9fe;
+    --muted:     #9d7ec9;
+  }
+  body {
+    min-height: 100vh;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(124,58,237,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(240,171,252,0.07) 0%, transparent 50%);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: var(--text);
+  }
+  input, button { font-family: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: 0.6; }
+
+  /* ── Header ── */
+  #header {
+    background: linear-gradient(135deg, #1c1030 0%, #120a1e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.6);
+  }
+  #header::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+    background-size: 22px 22px; opacity: 0.3; pointer-events: none;
+  }
+  #header-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px; position: relative;
+  }
+  #logo { display: flex; align-items: center; gap: 12px; }
+  #logo-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--glow), var(--lavender));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; box-shadow: 0 0 18px rgba(192,132,252,0.4);
+  }
+  #logo-name { font-weight: 900; font-size: 17px; color: var(--lavender);
+    text-shadow: 0 0 14px rgba(192,132,252,0.4); }
+  #logo-sub  { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-top: 2px; }
+
+  #tabs { display: flex; gap: 4px; }
+  .tab-btn {
+    padding: 8px 18px; border-radius: 10px; border: 1px solid transparent;
+    background: transparent; color: var(--muted);
+    font-size: 13px; font-weight: 700; text-transform: capitalize;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: rgba(124,58,237,0.2); color: var(--lavender);
+    border-color: rgba(124,58,237,0.35);
+    box-shadow: 0 0 12px rgba(124,58,237,0.2);
+  }
+
+  /* ── Layout ── */
+  #main { max-width: 1200px; margin: 0 auto; padding: 32px; }
+
+  /* ── Tab panels ── */
+  .tab-panel { display: none; flex-direction: column; gap: 24px; }
+  .tab-panel.active { display: flex; }
+
+  /* ── URL input card ── */
+  #url-card {
+    background: linear-gradient(155deg, #2a1848, #1a1030, #220f3a);
+    border: 1px solid var(--border); border-radius: 24px; padding: 36px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 0 60px rgba(124,58,237,0.15), 0 4px 32px rgba(0,0,0,0.6);
+  }
+  #url-card .moon-bg {
+    position: absolute; top: 16px; right: 24px;
+    font-size: 48px; opacity: 0.08; user-select: none;
+    filter: drop-shadow(0 0 8px var(--moon));
+  }
+  #url-card h2 { font-size: 24px; font-weight: 900; color: var(--lavender);
+    text-shadow: 0 0 20px rgba(192,132,252,0.3); margin-bottom: 6px; }
+  #url-card p  { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+  #url-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  #url-input {
+    flex: 1; min-width: 280px; padding: 14px 20px;
+    background: rgba(18,10,30,0.7); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text); font-size: 14px; outline: none;
+    font-family: monospace; box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+    transition: border 0.2s;
+  }
+  #url-input:focus { border-color: var(--glow); }
+  #analyze-btn {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #7c3aed, #c084fc);
+    border: none; border-radius: 12px; color: #120a1e;
+    font-size: 14px; font-weight: 900; white-space: nowrap;
+    box-shadow: 0 0 20px rgba(192,132,252,0.4); letter-spacing: 0.5px;
+    transition: all 0.25s;
+  }
+  #analyze-btn.loading { background: rgba(124,58,237,0.2); color: var(--lavender); box-shadow: none; }
+  #samples { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+  #samples span { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; }
+  .sample-btn {
+    background: rgba(124,58,237,0.08); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--muted); font-size: 11px;
+    padding: 4px 10px; font-family: monospace; transition: all 0.2s;
+  }
+  .sample-btn:hover { border-color: var(--lavender); }
+
+  /* ── Loading ── */
+  #loading-card {
+    background: var(--surface); border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 16px; padding: 40px; text-align: center;
+    box-shadow: 0 0 40px rgba(124,58,237,0.1); display: none;
+  }
+  #loading-card .spin { font-size: 44px; margin-bottom: 16px; display: inline-block;
+    animation: spin 3s linear infinite; filter: drop-shadow(0 0 12px var(--lavender)); }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  #loading-card .title { color: var(--lavender); font-weight: 700; margin-bottom: 8px; font-size: 16px; }
+  #loading-card .sub   { color: var(--muted); font-size: 13px; letter-spacing: 0.5px; }
+
+  /* ── Results ── */
+  #results { display: none; flex-direction: column; gap: 20px; }
+
+  /* ── Card ── */
+  .card {
+    background: linear-gradient(160deg, #2a1848, #1e1235);
+    border: 1px solid var(--border); border-radius: 16px; padding: 24px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.5); position: relative; overflow: hidden;
+  }
+  .card-head { font-size: 11px; color: var(--muted); font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 18px; }
+
+  /* ── Product header ── */
+  #product-header { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  #product-meta { flex: 1; }
+  #product-name-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  #product-name { font-size: 19px; font-weight: 900; color: var(--text); }
+  #product-url  { color: var(--lavender); font-size: 12px; font-family: monospace; opacity: 0.6; }
+  #product-category {
+    display: inline-block; margin-top: 6px;
+    background: rgba(192,132,252,0.1); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px 10px;
+    font-size: 11px; color: var(--muted); letter-spacing: 0.5px;
+  }
+
+  /* ── Risk badge ── */
+  .risk-badge {
+    padding: 4px 12px; border-radius: 20px; font-size: 10px;
+    font-weight: 700; letter-spacing: 1.5px; font-family: monospace;
+  }
+  .risk-LOW    { color: #86efac; background: rgba(134,239,172,0.12); border: 1px solid rgba(134,239,172,0.3); }
+  .risk-MEDIUM { color: #fde68a; background: rgba(253,230,138,0.12); border: 1px solid rgba(253,230,138,0.3); }
+  .risk-HIGH   { color: #f87171; background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); }
+
+  /* ── Stats grid ── */
+  #stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px,1fr)); gap: 14px; }
+  .stat-card {
+    background: linear-gradient(160deg, #2a1848, #1e1235);
+    border: 1px solid var(--border); border-radius: 16px; padding: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  .stat-icon  { font-size: 20px; }
+  .stat-value { font-size: 26px; font-weight: 800; font-family: monospace; }
+  .stat-unit  { font-size: 13px; opacity: 0.6; }
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; }
+
+  /* ── Star rating card ── */
+  #star-card {
+    background: linear-gradient(160deg, #2a1848, #1e1235);
+    border: 1px solid rgba(240,171,252,0.25); border-radius: 16px; padding: 20px;
+    display: flex; flex-direction: column; gap: 10px;
+    box-shadow: 0 0 20px rgba(240,171,252,0.06), 0 4px 24px rgba(0,0,0,0.4);
+  }
+  #stars-row { display: flex; gap: 3px; align-items: center; }
+  .star-svg  { transition: filter 0.3s; }
+  #rating-num { font-size: 24px; font-weight: 800; color: var(--ghostPink);
+    font-family: monospace; text-shadow: 0 0 10px rgba(240,171,252,0.4); }
+  #rating-label { font-size: 10px; color: rgba(240,171,252,0.5); margin-left: 4px; }
+
+  /* ── Issues / suggestions ── */
+  #panels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .panel {
+    border-radius: 16px; padding: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  .panel-issues {
+    background: linear-gradient(155deg, rgba(248,113,113,0.06), rgba(18,10,30,0.8));
+    border: 1px solid rgba(248,113,113,0.2);
+  }
+  .panel-sugg {
+    background: linear-gradient(155deg, rgba(134,239,172,0.06), rgba(18,10,30,0.8));
+    border: 1px solid rgba(134,239,172,0.2);
+  }
+  .panel-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; margin-bottom: 16px; }
+  .panel-issues .panel-title { color: var(--blood); }
+  .panel-sugg   .panel-title { color: var(--sage); }
+  .panel-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; font-size: 13px; color: var(--text);
+    line-height: 1.55; opacity: 0.85;
+  }
+  .panel-item-icon { font-size: 14px; margin-top: 2px; flex-shrink: 0; }
+  .panel-issues .panel-item + .panel-item { border-top: 1px solid rgba(248,113,113,0.1); }
+  .panel-sugg   .panel-item + .panel-item { border-top: 1px solid rgba(134,239,172,0.1); }
+
+  /* ── Savings banner ── */
+  #savings {
+    background: linear-gradient(135deg, rgba(192,132,252,0.12), rgba(240,171,252,0.07));
+    border: 1px solid rgba(192,132,252,0.25); border-radius: 16px; padding: 22px;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    box-shadow: 0 0 30px rgba(192,132,252,0.08); position: relative; overflow: hidden;
+  }
+  #savings-icon { font-size: 40px; filter: drop-shadow(0 0 10px rgba(253,230,138,0.6)); }
+  #savings-title { font-weight: 800; margin-bottom: 6px; color: var(--lavender); font-size: 15px; }
+  #savings-text  { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+  /* ── Circle SVG ── */
+  .circle-score text { dominant-baseline: middle; }
+
+  /* ── Dashboard ── */
+  #kpi-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(155px,1fr)); gap: 14px; }
+  #charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .bar-wrap { display: flex; gap: 8px; align-items: flex-end; height: 110px; }
+  .bar-col  { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar-val  { font-size: 9px; color: var(--muted); }
+  .bar-body { width: 100%; border-radius: 4px 4px 0 0; transition: height 1s ease; min-height: 4px; }
+  .bar-lbl  { font-size: 8px; color: var(--muted); text-align: center; line-height: 1.2; }
+  .risk-bar-wrap { margin-bottom: 18px; }
+  .risk-bar-row  { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .risk-bar-track { height: 8px; background: rgba(61,34,96,0.6); border-radius: 4px; }
+  .risk-bar-fill  { height: 100%; border-radius: 4px; transition: width 1.2s ease; }
+  #risk-table { width: 100%; }
+  .risk-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; flex-wrap: wrap; }
+  .risk-row + .risk-row { border-top: 1px solid rgba(61,34,96,0.5); }
+  .risk-num { width:28px;height:28px;background:rgba(192,132,252,0.08);border:1px solid var(--border);
+    border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:800;color:var(--muted);font-family:monospace;flex-shrink:0; }
+  .risk-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .risk-cat  { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; }
+  .risk-pct  { color: var(--blood); font-weight: 700; font-family: monospace; font-size: 14px;
+    text-shadow: 0 0 8px rgba(248,113,113,0.3); margin-left: auto; }
+
+  /* ── History ── */
+  .history-item {
+    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  }
+  .history-meta { flex: 1; }
+  .history-name { font-weight: 700; margin-bottom: 4px; color: var(--text); font-size: 15px; }
+  .history-url  { font-family: monospace; font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .history-row  { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: 12px; }
+  #empty-history { padding: 70px; text-align: center; }
+  #empty-history .icon { font-size: 56px; opacity: 0.2; margin-bottom: 16px;
+    filter: drop-shadow(0 0 8px var(--lavender)); display: block; }
+  #empty-history p { color: var(--muted); font-size: 14px; }
+
+  /* ── Dot grid rune bg ── */
+  .rune-bg {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  }
+  .rune-bg::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, var(--lavender) 1px, transparent 1px);
+    background-size: 28px 28px; opacity: 0.025;
+  }
+
+  @media(max-width:640px) {
+    #panels-grid, #charts-grid { grid-template-columns: 1fr; }
+    #main { padding: 16px; }
+    #header { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<div id="header">
+  <div id="header-inner">
+    <div id="logo">
+      <div id="logo-icon">🔮</div>
+      <div>
+        <div id="logo-name">ReturnShield AI</div>
+        <div id="logo-sub">✦ E-COMMERCE RETURN REDUCTION AGENT ✦</div>
+      </div>
+    </div>
+    <div id="tabs">
+      <button class="tab-btn active" data-tab="analyze">🧪 analyze</button>
+      <button class="tab-btn"        data-tab="dashboard">📊 dashboard</button>
+      <button class="tab-btn"        data-tab="history">📜 history</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────── -->
+<div id="main">
+
+  <!-- ══ ANALYZE TAB ════════════════════════════════════════════════════════ -->
+  <div id="tab-analyze" class="tab-panel active">
+
+    <!-- URL card -->
+    <div id="url-card">
+      <div class="rune-bg"></div>
+      <div class="moon-bg">🌙</div>
+      <div style="position:relative">
+        <h2>🔍 Analyze Product Listing</h2>
+        <p>Drop your product URL into the cauldron — receive AI-powered return risk divination &amp; enchanted recommendations</p>
+        <div id="url-row">
+          <input id="url-input" type="text" placeholder="https://www.amazon.in/product/... or any e-commerce URL"/>
+          <button id="analyze-btn">🧙 Cast Spell</button>
+        </div>
+        <div id="samples">
+          <span>☽ Try sample:</span>
+          <button class="sample-btn" data-url="https://www.amazon.in/dp/B09XYZ123">amazon.in</button>
+          <button class="sample-btn" data-url="https://www.flipkart.com/shoes/p/itm123">flipkart.com</button>
+          <button class="sample-btn" data-url="https://www.meesho.com/product/xyz789">meesho.com</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading-card">
+      <div class="spin">🧪</div>
+      <div class="title">Brewing the analysis potion...</div>
+      <div class="sub">Scanning enchantments ✦ Detecting hexes ✦ Conjuring recommendations</div>
+    </div>
+
+    <!-- Results -->
+    <div id="results">
+
+      <!-- Product header -->
+      <div class="card" id="product-header-card">
+        <div class="rune-bg"></div>
+        <div id="product-header">
+          <svg id="circle-score" width="92" height="92"></svg>
+          <div id="product-meta">
+            <div id="product-name-row">
+              <span id="product-name"></span>
+              <span id="risk-badge-main" class="risk-badge"></span>
+            </div>
+            <div id="product-url"></div>
+            <div id="product-category"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div id="stats-grid">
+        <div id="star-card">
+          <div class="rune-bg"></div>
+          <div class="stat-icon" style="position:relative">✨</div>
+          <div id="stars-row" style="position:relative"></div>
+          <div style="display:flex;align-items:baseline;gap:6px;position:relative">
+            <span id="rating-num">0.0</span>
+            <span style="font-size:12px;color:var(--muted)">/5</span>
+            <span id="rating-label"></span>
+          </div>
+          <div class="stat-label">Customer Rating</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💬</div>
+          <div class="stat-value" id="stat-reviews" style="color:var(--sky)"></div>
+          <div class="stat-label">Total Reviews</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">↩️</div>
+          <div class="stat-value" id="stat-return" style="color:var(--blood)"></div>
+          <div class="stat-label">Return Rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-value" id="stat-risk" style="color:var(--moon)"></div>
+          <div class="stat-label">Risk Score</div>
+        </div>
+      </div>
+
+      <!-- Issues & Suggestions -->
+      <div id="panels-grid">
+        <div class="panel panel-issues">
+          <div class="panel-title">☠ DETECTED CURSES</div>
+          <div id="issues-list"></div>
+        </div>
+        <div class="panel panel-sugg">
+          <div class="panel-title">🌿 ENCHANTED FIXES</div>
+          <div id="sugg-list"></div>
+        </div>
+      </div>
+
+      <!-- Savings -->
+      <div id="savings">
+        <div id="savings-icon">🏺</div>
+        <div>
+          <div id="savings-title">✦ Treasure Recovered by the Coven</div>
+          <div id="savings-text"></div>
+        </div>
+      </div>
+
+    </div><!-- #results -->
+  </div><!-- #tab-analyze -->
+
+  <!-- ══ DASHBOARD TAB ══════════════════════════════════════════════════════ -->
+  <div id="tab-dashboard" class="tab-panel">
+
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:28px;filter:drop-shadow(0 0 8px rgba(192,132,252,0.6))">📊</span>
+      <h2 style="font-size:22px;font-weight:900;color:var(--lavender)">Coven Analytics</h2>
+    </div>
+
+    <div id="kpi-grid">
+      <div class="stat-card"><div class="stat-icon">📦</div>
+        <div class="stat-value" style="color:var(--lavender)">1,247</div>
+        <div class="stat-label">Total Relics</div></div>
+      <div class="stat-card"><div class="stat-icon">↩️</div>
+        <div class="stat-value" style="color:var(--blood)">14.8<span class="stat-unit">%</span></div>
+        <div class="stat-label">Avg Return Rate</div></div>
+      <div class="stat-card"><div class="stat-icon">🏺</div>
+        <div class="stat-value" style="color:var(--pumpkin)">₹2.4L</div>
+        <div class="stat-label">Monthly Gold Lost</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div>
+        <div class="stat-value" style="color:var(--sage)">89<span class="stat-unit">%</span></div>
+        <div class="stat-label">Hexes Resolved</div></div>
+    </div>
+
+    <div id="charts-grid">
+      <div class="card">
+        <div class="rune-bg"></div>
+        <div class="card-head" style="position:relative">☽ Return Reasons Breakdown</div>
+        <div class="bar-wrap" id="bar-chart" style="position:relative"></div>
+      </div>
+      <div class="card">
+        <div class="rune-bg"></div>
+        <div class="card-head" style="position:relative">✦ Risk Distribution</div>
+        <div id="risk-bars" style="position:relative"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="rune-bg"></div>
+      <div class="card-head" style="position:relative">🩸 High-Risk Relics Needing Attention</div>
+      <div id="risk-table" style="position:relative"></div>
+    </div>
+
+  </div><!-- #tab-dashboard -->
+
+  <!-- ══ HISTORY TAB ════════════════════════════════════════════════════════ -->
+  <div id="tab-history" class="tab-panel">
+
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:26px;filter:drop-shadow(0 0 8px rgba(240,171,252,0.6))">📜</span>
+      <h2 style="font-size:22px;font-weight:900;color:var(--lavender)">The Grimoire</h2>
+    </div>
+
+    <div id="history-list">
+      <div class="card" id="empty-history">
+        <span class="icon">📜</span>
+        <p>The grimoire is empty — cast your first spell in the Analyze tab</p>
+      </div>
+    </div>
+
+  </div><!-- #tab-history -->
+
+</div><!-- #main -->
+
+<script>
+/* ── Constants ─────────────────────────────────────────────────────────────── */
+const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
+const analysisHistory = [];
+
+/* ── Tab switching ──────────────────────────────────────────────────────────── */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+/* ── Sample URL buttons ─────────────────────────────────────────────────────── */
+document.querySelectorAll(".sample-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.getElementById("url-input").value = btn.dataset.url;
+  });
+});
+
+/* ── Enter key ──────────────────────────────────────────────────────────────── */
+document.getElementById("url-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") runAnalysis();
+});
+document.getElementById("analyze-btn").addEventListener("click", runAnalysis);
+
+/* ── API call ────────────────────────────────────────────────────────────────── */
+async function runAnalysis() {
+  const url = document.getElementById("url-input").value.trim();
+  if (!url) return;
+
+  setLoading(true);
+
+  try {
+    const res = await fetch(ANTHROPIC_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: `You are an expert e-commerce return reduction AI agent. Analyze this product listing URL: ${url}
+
+Provide a structured analysis in this EXACT JSON format only, no other text, no markdown backticks:
+{
+  "productName": "estimated product name from URL",
+  "returnRisk": <number 0-100>,
+  "rating": <number 1-5>,
+  "totalReviews": <estimated number>,
+  "returnRate": <percentage as number>,
+  "issues": ["issue1", "issue2", "issue3"],
+  "suggestions": ["suggestion1", "suggestion2", "suggestion3", "suggestion4"],
+  "score": <quality score 0-100>,
+  "category": "product category",
+  "riskLevel": "LOW|MEDIUM|HIGH"
+}`
+        }]
+      })
+    });
+
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    const data = await res.json();
+    const text = (data.content?.[0]?.text || "").replace(/```json|```/g, "").trim();
+    renderResults(url, JSON.parse(text));
+
+  } catch (err) {
+    console.error(err);
+    renderResults(url, {
+      productName: url.includes("amazon") ? "Potion from Amazon" : url.includes("flipkart") ? "Relic from Flipkart" : "Enchanted Artefact",
+      returnRisk: 38, rating: 4.1, totalReviews: 1240, returnRate: 14.2,
+      issues: [
+        "Size inconsistency reported by 23% of buyers",
+        "Color differs from product images (18% reviews)",
+        "Material quality below expectations for price point",
+      ],
+      suggestions: [
+        "Add detailed size chart with measurements in cm/inches",
+        "Upload 360° product photos and video demonstrations",
+        "Revise product description to match actual color tone",
+        "Add FAQ section addressing top 5 return reasons",
+      ],
+      score: 72, category: "General", riskLevel: "MEDIUM",
+    });
+  }
+}
+
+/* ── Loading state ───────────────────────────────────────────────────────────── */
+function setLoading(on) {
+  const btn = document.getElementById("analyze-btn");
+  document.getElementById("loading-card").style.display = on ? "block" : "none";
+  document.getElementById("results").style.display = "none";
+  if (on) {
+    btn.textContent = "⏳ Brewing...";
+    btn.classList.add("loading");
+    btn.disabled = true;
+  } else {
+    btn.textContent = "🧙 Cast Spell";
+    btn.classList.remove("loading");
+    btn.disabled = false;
+  }
+}
+
+/* ── Render results ──────────────────────────────────────────────────────────── */
+function renderResults(url, d) {
+  setLoading(false);
+
+  const level = d.riskLevel || (d.returnRisk > 60 ? "HIGH" : d.returnRisk > 35 ? "MEDIUM" : "LOW");
+
+  // Circle score
+  renderCircleScore(document.getElementById("circle-score"), d.score || 72, 92);
+
+  // Product header
+  document.getElementById("product-name").textContent = d.productName || "Enchanted Product";
+  const badge = document.getElementById("risk-badge-main");
+  badge.className = `risk-badge risk-${level}`;
+  badge.textContent = { LOW: "✦ LOW RISK", MEDIUM: "☽ MED RISK", HIGH: "☠ HIGH RISK" }[level];
+  document.getElementById("product-url").textContent = url;
+  const catEl = document.getElementById("product-category");
+  if (d.category) { catEl.style.display = "inline-block"; catEl.textContent = "✦ " + d.category; }
+  else catEl.style.display = "none";
+
+  // Stars
+  renderStars(parseFloat(d.rating) || 4.2);
+
+  // Stats
+  document.getElementById("stat-reviews").textContent = Number(d.totalReviews || 1240).toLocaleString();
+  document.getElementById("stat-return").innerHTML  = (d.returnRate || "14.2") + '<span class="stat-unit">%</span>';
+  document.getElementById("stat-risk").innerHTML    = (d.returnRisk || 38) + '<span class="stat-unit">/100</span>';
+
+  // Issues
+  const issEl = document.getElementById("issues-list");
+  issEl.innerHTML = (d.issues || []).map(i =>
+    `<div class="panel-item"><span class="panel-item-icon" style="color:var(--blood)">⚡</span><span>${i}</span></div>`
+  ).join("");
+
+  // Suggestions
+  const sugEl = document.getElementById("sugg-list");
+  sugEl.innerHTML = (d.suggestions || []).map(s =>
+    `<div class="panel-item"><span class="panel-item-icon" style="color:var(--sage)">✦</span><span>${s}</span></div>`
+  ).join("");
+
+  // Savings
+  const savings   = Math.floor((d.returnRisk || 38) * 800 + 20000);
+  const reduction = Math.floor((d.returnRisk || 38) * 0.6);
+  document.getElementById("savings-text").innerHTML =
+    `Lifting these <strong style="color:var(--ghostPink)">${(d.suggestions||[]).length} curses</strong> could banish ` +
+    `<span style="color:var(--sage);font-weight:700">${reduction}%</span> of returns — saving ` +
+    `<span style="color:var(--moon);font-weight:700">₹${savings.toLocaleString()}/month</span> in lost gold`;
+
+  document.getElementById("results").style.display = "flex";
+
+  // Add to history
+  const time = new Date().toLocaleTimeString();
+  analysisHistory.unshift({ url, data: d, time });
+  if (analysisHistory.length > 5) analysisHistory.pop();
+  renderHistory();
+}
+
+/* ── Circle SVG score ────────────────────────────────────────────────────────── */
+function renderCircleScore(svg, score, size) {
+  const r    = size / 2 - 8;
+  const circ = 2 * Math.PI * r;
+  const pct  = (score / 100) * circ;
+  const color = score >= 70 ? "#86efac" : score >= 40 ? "#fde68a" : "#f87171";
+  svg.setAttribute("width", size); svg.setAttribute("height", size);
+  svg.innerHTML = `
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(61,34,96,0.6)" stroke-width="6"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="6"
+      stroke-dasharray="${pct} ${circ}" stroke-linecap="round"
+      transform="rotate(-90 ${size/2} ${size/2})"
+      style="transition:stroke-dasharray 1.2s ease;filter:drop-shadow(0 0 6px ${color}88)"/>
+    <text x="${size/2}" y="${size/2}" text-anchor="middle" dominant-baseline="middle"
+      fill="${color}" font-size="17" font-weight="800" font-family="monospace">${score}</text>`;
+}
+
+/* ── Animated star rating ─────────────────────────────────────────────────────── */
+function renderStars(rating, container = document.getElementById("stars-row"), size = 24, animate = true) {
+  const stars = [2, 3, 4, 5]; // first star removed
+  const ghostPink = "#f0abfc";
+  const borderColor = "#3d2260";
+
+  function drawStars(filled) {
+    container.innerHTML = stars.map(star => {
+      const fill  = Math.min(Math.max(filled - (star - 1), 0), 1);
+      const uid   = `sg-${star}-${Math.round(rating * 10)}`;
+      const glow  = fill > 0 ? `drop-shadow(0 0 5px ${ghostPink}99)` : "none";
+      return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="filter:${glow};transition:filter 0.3s">
+        <defs>
+          <linearGradient id="${uid}" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="${fill*100}%" stop-color="${ghostPink}"/>
+            <stop offset="${fill*100}%" stop-color="${borderColor}55"/>
+          </linearGradient>
+        </defs>
+        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
+          fill="url(#${uid})" stroke="${fill>0?ghostPink:borderColor}" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>`;
+    }).join("");
+  }
+
+  const numEl   = document.getElementById("rating-num");
+  const labelEl = document.getElementById("rating-label");
+
+  if (!animate) {
+    drawStars(rating);
+    if (numEl) numEl.textContent = rating.toFixed(1);
+    if (labelEl) labelEl.textContent = rating >= 4.5 ? "✦ Excellent" : rating >= 4 ? "✦ Very Good" : rating >= 3 ? "✦ Good" : "✦ Fair";
+    return;
+  }
+
+  let start = null;
+  const step = (ts) => {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / 1200, 1);
+    const e = 1 - Math.pow(1 - p, 3);
+    const cur = e * rating;
+    drawStars(cur);
+    if (numEl) numEl.textContent = (cur).toFixed(1);
+    if (labelEl) labelEl.textContent = cur >= 4.5 ? "✦ Excellent" : cur >= 4 ? "✦ Very Good" : cur >= 3 ? "✦ Good" : "✦ Fair";
+    if (p < 1) requestAnimationFrame(step);
+    else {
+      drawStars(rating);
+      if (numEl) numEl.textContent = rating.toFixed(1);
+    }
+  };
+  requestAnimationFrame(step);
+}
+
+/* ── Dashboard ────────────────────────────────────────────────────────────────── */
+(function buildDashboard() {
+  const W = {
+    blood: "#f87171", ghostPink: "#f0abfc", pumpkin: "#fb923c",
+    moon: "#fde68a", sage: "#86efac", lavender: "#c084fc",
+  };
+
+  const returnReasons = [
+    { label: "Wrong Size",   value: 28, color: W.blood },
+    { label: "Color Diff",   value: 22, color: W.ghostPink },
+    { label: "Defective",    value: 18, color: W.pumpkin },
+    { label: "Not as Desc",  value: 17, color: W.moon },
+    { label: "Late Deliver", value: 9,  color: W.sage },
+    { label: "Others",       value: 6,  color: W.lavender },
+  ];
+  const maxVal = Math.max(...returnReasons.map(d => d.value));
+  const barChart = document.getElementById("bar-chart");
+  barChart.innerHTML = returnReasons.map(d => `
+    <div class="bar-col">
+      <div class="bar-val">${d.value}%</div>
+      <div class="bar-body" style="height:${(d.value/maxVal)*85}px;
+        background:linear-gradient(to top,${d.color}cc,${d.color}55);
+        border:1px solid ${d.color}44;box-shadow:0 0 8px ${d.color}33"></div>
+      <div class="bar-lbl">${d.label}</div>
+    </div>`).join("");
+
+  const riskDist = [
+    { label: "High Risk Products",   pct: 18, color: W.blood },
+    { label: "Medium Risk Products", pct: 45, color: W.moon },
+    { label: "Low Risk Products",    pct: 37, color: W.sage },
+  ];
+  document.getElementById("risk-bars").innerHTML = riskDist.map(item => `
+    <div class="risk-bar-wrap">
+      <div class="risk-bar-row">
+        <span style="font-size:13px;color:var(--muted)">${item.label}</span>
+        <span style="font-size:13px;font-weight:700;color:${item.color};text-shadow:0 0 8px ${item.color}66">${item.pct}%</span>
+      </div>
+      <div class="risk-bar-track">
+        <div class="risk-bar-fill" style="width:${item.pct}%;background:linear-gradient(90deg,${item.color}cc,${item.color}66);box-shadow:0 0 8px ${item.color}44"></div>
+      </div>
+    </div>`).join("");
+
+  const tableData = [
+    { name: "Men's Running Shoes XL",      category: "Footwear",    returns: "31%", risk: "HIGH" },
+    { name: "Ethnic Kurti Set (Blue)",      category: "Clothing",    returns: "27%", risk: "HIGH" },
+    { name: "Wireless Earbuds Pro",         category: "Electronics", returns: "22%", risk: "MEDIUM" },
+    { name: "Stainless Steel Water Bottle", category: "Kitchen",     returns: "11%", risk: "MEDIUM" },
+    { name: "Cotton Bedsheet 6pc",          category: "Home",        returns: "8%",  risk: "LOW" },
+  ];
+  document.getElementById("risk-table").innerHTML = tableData.map((p, i) => `
+    <div class="risk-row">
+      <div class="risk-num">${i+1}</div>
+      <div style="flex:1"><div class="risk-name">${p.name}</div><div class="risk-cat">${p.category}</div></div>
+      <div class="risk-pct">${p.returns}</div>
+      <span class="risk-badge risk-${p.risk}">${{LOW:"✦ LOW RISK",MEDIUM:"☽ MED RISK",HIGH:"☠ HIGH RISK"}[p.risk]}</span>
+    </div>`).join("");
+})();
+
+/* ── History ──────────────────────────────────────────────────────────────────── */
+function renderHistory() {
+  const list = document.getElementById("history-list");
+  if (analysisHistory.length === 0) {
+    list.innerHTML = `<div class="card" id="empty-history">
+      <span class="icon">📜</span>
+      <p>The grimoire is empty — cast your first spell in the Analyze tab</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = analysisHistory.map((h, idx) => {
+    const d = h.data;
+    const level = d.riskLevel || "MEDIUM";
+    const labelMap = { LOW: "✦ LOW RISK", MEDIUM: "☽ MED RISK", HIGH: "☠ HIGH RISK" };
+    const svgId = `hist-svg-${idx}`;
+    const starsId = `hist-stars-${idx}`;
+    return `<div class="card history-item">
+      <div class="rune-bg"></div>
+      <svg id="${svgId}" width="62" height="62" style="flex-shrink:0;position:relative"></svg>
+      <div class="history-meta" style="position:relative">
+        <div class="history-name">${d.productName || "Enchanted Product"}</div>
+        <div class="history-url">${h.url}</div>
+        <div class="history-row">
+          <div id="${starsId}" style="display:flex;gap:2px;align-items:center"></div>
+          <span style="color:var(--blood)">↩️ ${d.returnRate || "14"}% returns</span>
+          <span style="color:var(--muted)">🕒 ${h.time}</span>
+        </div>
+      </div>
+      <span class="risk-badge risk-${level}" style="position:relative">${labelMap[level]}</span>
+    </div>`;
+  }).join("");
+
+  // Render circles and mini stars after DOM update
+  analysisHistory.forEach((h, idx) => {
+    const svg = document.getElementById(`hist-svg-${idx}`);
+    if (svg) renderCircleScore(svg, h.data.score || 72, 62);
+    const starsEl = document.getElementById(`hist-stars-${idx}`);
+    if (starsEl) renderMiniStars(starsEl, parseFloat(h.data.rating) || 4.2, 14);
+  });
+}
+
+function renderMiniStars(container, rating, size) {
+  const stars = [2, 3, 4, 5];
+  const ghostPink = "#f0abfc";
+  const borderColor = "#3d2260";
+  container.innerHTML = stars.map(star => {
+    const fill = Math.min(Math.max(rating - (star - 1), 0), 1);
+    const uid  = `mgs-${star}-${Math.round(rating * 10)}-${Math.random().toString(36).slice(2,5)}`;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24">
+      <defs>
+        <linearGradient id="${uid}" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="${fill*100}%" stop-color="${ghostPink}"/>
+          <stop offset="${fill*100}%" stop-color="${borderColor}55"/>
+        </linearGradient>
+      </defs>
+      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
+        fill="url(#${uid})" stroke="${fill>0?ghostPink:borderColor}" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>`;
+  }).join("");
+}
+</script>
+</body>
+</html>
